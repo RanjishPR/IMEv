@@ -1,0 +1,90 @@
+{
+  "name": "incident-management",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap-cloud-sdk/connectivity": "^3.12.1",
+    "@sap-cloud-sdk/http-client": "^3.12.1",
+    "@sap-cloud-sdk/resilience": "^3.12.1",
+    "@sap-cloud-sdk/util": "^3.12.1",
+    "@sap/cds": "^7",
+    "@sap/cds-hana": "^2",
+    "@sap/xssec": "^3",
+    "express": "^4",
+    "passport": "^0.7.0",
+    "@sap/xb-msg-amqp-v100": "^0"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^7",
+    "@sap/ux-specification": "UI5-1.120",
+    "axios": "^1.6.7",
+    "chai": "^4.4.1",
+    "chai-as-promised": "^7.1.1",
+    "chai-subset": "^1.6.0",
+    "jest": "^29.7.0",
+    "rimraf": "^3.0.2"
+  },
+  "scripts": {
+    "test": "jest tests/test.js",
+    "start": "cds-serve",
+    "watch-incidents": "cds watch --open incidents/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy incident-management --delete-services --delete-service-keys --delete-service-brokers",
+    "build": "rimraf resources mta_archives && mbt build --mtar archive",
+    "deploy": "cf deploy mta_archives/archive.mtar --retries 1"
+  },
+  "cds": {
+    "requires": {
+      "messaging": {
+        "kind": "local-messaging",
+        "[production]": {
+          "kind": "enterprise-messaging-shared",
+          "format": "cloudevents"
+        }
+      },
+      "[development]": {
+        "auth": {
+          "kind": "mocked",
+          "users": {
+            "incident.support@tester.sap.com": {
+              "password": "initial",
+              "roles": [
+                "support"
+              ]
+            },
+            "alice": {
+              "roles": [
+                "support"
+              ]
+            },
+            "bob": {
+              "roles": [
+                "support"
+              ]
+            }
+          }
+        }
+      },
+      "[production]": {
+        "db": "hana",
+        "auth": "xsuaa"
+      },
+      "API_BUSINESS_PARTNER": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_BUSINESS_PARTNER",
+        "[production]": {
+          "credentials": {
+            "destination": "incidents-api-access",
+            "path": "/sap/opu/odata/sap/API_BUSINESS_PARTNER"
+          }
+        }
+      }
+    }
+  },
+  "sapux": [
+    "app/incidents"
+  ]
+}
